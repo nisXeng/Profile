@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Device Intel Admin - Supabase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0b10;
+      --surface: #16161f;
+      --border: rgba(255,255,255,.08);
+      --text: #f4f4f7;
+      --muted: #8b8b9a;
+      --accent: #ff5e3a;
+      --teal: #00e5d4;
+      --violet: #b794f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Manrope', sans-serif;
+      padding: 2rem;
+      max-width: 1600px;
+      margin: auto;
+    }
+    h1 { color: var(--accent); margin-bottom: 2rem; font-size: 2rem; }
+    
+    .auth-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .auth-section input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.8rem 1.2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 100%;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .stat-card h3 { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em; }
+    .stat-card .value { font-size: 2rem; font-weight: 700; color: var(--accent); }
+    
+    .controls {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+      margin-bottom: 1rem;
+    }
+    .controls input, .controls select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    th, td {
+      padding: 0.7rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th { background: var(--bg); font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: 16px;
+      max-width: 800px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+    .close { float: right; cursor: pointer; font-size: 1.5rem; color: var(--muted); background: none; border: none; }
+    
+    .chart-container { width: 100%; max-width: 500px; margin: 1rem auto; }
+    
+    .hidden { display: none; }
+    .flex { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+  </style>
+</head>
+<body>
+  <div id="login-section" class="auth-section">
+    <h2>Admin Login</h2>
+    <p style="color: var(--muted); margin-bottom: 1rem;">Enter your Supabase credentials</p>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <br>
+    <button class="btn" onclick="login()">Login</button>
+  </div>
+
+  <div id="dashboard-section" class="hidden">
+    <div class="flex" style="justify-content: space-between; margin-bottom: 2rem;">
+      <h1>Device Intelligence Dashboard</h1>
+      <button class="btn btn-outline" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="controls">
+      <input type="text" id="search" placeholder="Search all fields..." oninput="filterData()" />
+      <select id="filter-country" onchange="filterData()"><option value="">All Countries</option></select>
+      <select id="filter-browser" onchange="filterData()"><option value="">All Browsers</option></select>
+      <select id="filter-os" onchange="filterData()"><option value="">All OS</option></select>
+      <button class="btn" onclick="exportCSV()">Export CSV</button>
+      <button class="btn" onclick="loadData()">Refresh</button>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>IP</th>
+            <th>Country</th>
+            <th>City</th>
+            <th>Browser</th>
+            <th>OS</th>
+            <th>Device</th>
+            <th>GPS</th>
+            <th>Fingerprint</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <div class="flex" style="margin-top: 2rem;">
+      <div class="chart-container"><canvas id="browserChart"></canvas></div>
+      <div class="chart-container"><canvas id="osChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="modal" id="json-modal">
+    <div class="modal-content">
+      <button class="close" onclick="document.getElementById('json-modal').style.display='none'">&times;</button>
+      <pre id="modal-json" style="white-space: pre-wrap; font-size: 0.8rem; max-height: 70vh; overflow-y: auto;"></pre>
+    </div>
+  </div>
+
+  <script>
+    // ---------- SUPABASE CREDENTIALS (pre-filled) ----------
+    const SUPABASE_URL = 'https://bpauwepxzhhdbyrslfob.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwYXV3ZXB4emhoZGJ5cnNsZm9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2Mzk1NzcsImV4cCI6MjA5OTIxNTU3N30.GqlmxTJh7u2NL43WSIhNJGhs1CAWNHLeTKeOJqMtNkI';
+    // --------------------------------------------------------
+    
+    let supabase;
+    let allData = [];
+    let browserChart, osChart;
+
+    function initSupabase() {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      if (!email || !password) { alert('Please enter email and password'); return; }
+
+      initSupabase();
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) { alert('Login failed: ' + error.message); return; }
+
+      document.getElementById('login-section').classList.add('hidden');
+      document.getElementById('dashboard-section').classList.remove('hidden');
+      loadData();
+    }
+
+    async function logout() {
+      await supabase.auth.signOut();
+      document.getElementById('login-section').classList.remove('hidden');
+      document.getElementById('dashboard-section').classList.add('hidden');
+    }
+
+    async function loadData() {
+      if (!supabase) initSupabase();
+      const { data, error } = await supabase
+        .from('device_logs')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) { console.error(error); return; }
+      allData = data;
+      updateStats(data);
+      populateFilters(data);
+      renderTable(data);
+      renderCharts(data);
+    }
+
+    function updateStats(data) {
+      const totalHits = data.length;
+      const uniqueIPs = new Set(data.map(d => d.ip)).size;
+      const uniqueFPs = new Set(data.map(d => d.fingerprint)).size;
+      const today = new Date().toISOString().split('T')[0];
+      const todayHits = data.filter(d => d.created_at?.startsWith(today)).length;
+      
+      document.getElementById('stats').innerHTML = `
+        <div class="stat-card"><h3>Total Hits</h3><div class="value">${totalHits}</div></div>
+        <div class="stat-card"><h3>Unique IPs</h3><div class="value">${uniqueIPs}</div></div>
+        <div class="stat-card"><h3>Unique Fingerprints</h3><div class="value">${uniqueFPs}</div></div>
+        <div class="stat-card"><h3>Today's Hits</h3><div class="value">${todayHits}</div></div>
+      `;
+    }
+
+    function populateFilters(data) {
+      const countries = [...new Set(data.map(d => d.country).filter(Boolean))].sort();
+      const browsers = [...new Set(data.map(d => d.browser).filter(Boolean))].sort();
+      const oses = [...new Set(data.map(d => d.os).filter(Boolean))].sort();
+      
+      const fill = (id, options) => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = `<option value="">All</option>` + options.map(o => `<option>${o}</option>`).join('');
+      };
+      fill('filter-country', countries);
+      fill('filter-browser', browsers);
+      fill('filter-os', oses);
+    }
+
+    function filterData() {
+      const search = document.getElementById('search').value.toLowerCase();
+      const country = document.getElementById('filter-country').value;
+      const browser = document.getElementById('filter-browser').value;
+      const os = document.getElementById('filter-os').value;
+      
+      let filtered = allData;
+      if (search) filtered = filtered.filter(d => Object.values(d).some(v => String(v).toLowerCase().includes(search)));
+      if (country) filtered = filtered.filter(d => d.country === country);
+      if (browser) filtered = filtered.filter(d => d.browser === browser);
+      if (os) filtered = filtered.filter(d => d.os === os);
+      
+      renderTable(filtered);
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--muted);">No data found</td></tr>';
+        return;
+      }
+      data.forEach(d => {
+        const gps = d.gps_latitude ? `${Number(d.gps_latitude).toFixed(4)}, ${Number(d.gps_longitude).toFixed(4)}` : 'N/A';
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${new Date(d.created_at).toLocaleString()}</td>
+          <td>${d.ip || 'N/A'}</td>
+          <td>${d.country || 'N/A'}</td>
+          <td>${d.city || 'N/A'}</td>
+          <td>${d.browser || 'N/A'}</td>
+          <td>${d.os || 'N/A'}</td>
+          <td>${d.device_type || 'N/A'}</td>
+          <td>${gps}</td>
+          <td title="${d.fingerprint}">${(d.fingerprint || '').substring(0, 12)}...</td>
+          <td>
+            <button onclick="showJSON(${d.id})" style="background:none;border:none;cursor:pointer;color:var(--teal);">View</button>
+            <button onclick="deleteEntry(${d.id})" style="background:none;border:none;cursor:pointer;color:var(--accent);">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function deleteEntry(id) {
+      if (!confirm('Delete this entry?')) return;
+      const { error } = await supabase.from('device_logs').delete().eq('id', id);
+      if (error) alert('Delete failed: ' + error.message);
+      else loadData();
+    }
+
+    function showJSON(id) {
+      const entry = allData.find(d => d.id === id);
+      if (entry) {
+        document.getElementById('modal-json').textContent = JSON.stringify(entry, null, 2);
+        document.getElementById('json-modal').style.display = 'flex';
+      }
+    }
+
+    function renderCharts(data) {
+      const browserCount = {};
+      data.forEach(d => { const b = d.browser || 'Unknown'; browserCount[b] = (browserCount[b]||0)+1; });
+      if (browserChart) browserChart.destroy();
+      browserChart = new Chart(document.getElementById('browserChart'), {
+        type: 'bar',
+        data: { labels: Object.keys(browserCount), datasets: [{ label: 'Browsers', data: Object.values(browserCount), backgroundColor: '#ff5e3a' }] },
+        options: { plugins: { legend: { display: false } } }
+      });
+      
+      const osCount = {};
+      data.forEach(d => { const o = d.os || 'Unknown'; osCount[o] = (osCount[o]||0)+1; });
+      if (osChart) osChart.destroy();
+      osChart = new Chart(document.getElementById('osChart'), {
+        type: 'bar',
+        data: { labels: Object.keys(osCount), datasets: [{ label: 'OS', data: Object.values(osCount), backgroundColor: '#00e5d4' }] },
+        options: { plugins: { legend: { display: false } } }
+      });
+    }
+
+    function exportCSV() {
+      const rows = allData.map(d => [
+        d.created_at, d.ip, d.country, d.city, d.browser, d.os, d.device_type,
+        d.gps_latitude, d.gps_longitude, d.fingerprint
+      ]);
+      const csv = 'Timestamp,IP,Country,City,Browser,OS,Device,Lat,Lng,Fingerprint\n' +
+        rows.map(r => r.map(v => `"${v||''}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'device_data.csv'; a.click();
+    }
+
+    // Check if already logged in
+    (async () => {
+      initSupabase();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('dashboard-section').classList.remove('hidden');
+        loadData();
+      }
+    })();
+  </script>
+</body>
+</html>
